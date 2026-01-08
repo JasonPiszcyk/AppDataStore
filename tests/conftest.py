@@ -29,6 +29,7 @@ from tests.constants import *
 
 # System Modules
 import pytest
+import os
 
 # Local app modules
 
@@ -61,3 +62,31 @@ def pytest_configure(config: pytest.Config):
 # Fixtures
 #
 ###########################################################################
+#
+# INI file
+#
+@pytest.fixture(scope="function")
+def inifile(request: pytest.FixtureRequest) -> str:
+    '''
+    Make sure the ini file is empty at start of test and deleted at end of test
+
+    Args:
+        None
+
+    Returns:
+        str: The path for the log file
+
+    Raises:
+        None
+    '''
+    def _delete_file():
+        if os.path.exists(INI_FILE_NAME):
+            os.remove(INI_FILE_NAME)
+
+    # Delete the file
+    _delete_file()
+
+    # Add a finaliser to delete the file regardless of the test status
+    request.addfinalizer(_delete_file)
+
+    return INI_FILE_NAME

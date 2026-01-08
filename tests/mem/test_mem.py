@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-PyTest - Test of global datastore functions
+PyTest - Test of Memory datastore functions
 
 Copyright (C) 2025 Jason Piszcyk
 Email: Jason.Piszcyk@gmail.com

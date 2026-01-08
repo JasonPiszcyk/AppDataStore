@@ -64,6 +64,11 @@ INVALID_DOT_NAME_LIST = [
     "2"     # Trying to add a value in the lower level of a tree
 ]
 
+# INI File info
+INI_FILE_NAME = "/tmp/test_config.ini"
+BASIC_SECTION = "test_section"
+
+
 #
 # Global Variables
 #

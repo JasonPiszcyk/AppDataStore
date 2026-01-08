@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-PyTest - Base class for test functions
+PyTest - Test of Ini File datastore functions
 
 Copyright (C) 2025 Jason Piszcyk
 Email: Jason.Piszcyk@gmail.com
@@ -34,7 +34,7 @@ import pytest
 import time
 
 # Local app modules
-from appdatastore.base import DataStoreBaseClass
+from appdatastore.inifile import DataStoreINIFile
 
 # Imports for python variable type hints
 from typing import Any
@@ -60,15 +60,17 @@ from typing import Any
 
 ###########################################################################
 #
-# Base Class for tests
+# The tests...
 #
 ###########################################################################
 #
-# Base Class
+# Mem DataStore
 #
-class TestBase():
+class Test_INIFile_Datastore():
     '''
-    Base Test Class
+    Test Class - INIFile Datastore
+
+    Can't inheret the base class as we need to overwrite everything
 
     Attributes:
         None
@@ -78,14 +80,16 @@ class TestBase():
     #
     def _assert_not_set(
             self,
-            ds: DataStoreBaseClass | None,
+            ds: DataStoreINIFile | None,
+            section: str = "",
             name: str = ""
     ):
         '''
         Assert that the item does not exist
 
         Args:
-            ds (DataStoreBaseClass): The datastore to operate on
+            ds (DataStoreINIFile): The datastore to operate on
+            section (str): The section in which the item appears 
             name (str): Name of the item
 
         Returns:
@@ -95,19 +99,22 @@ class TestBase():
             AssertionError:
                 when test fails
         '''
-        assert isinstance(ds, DataStoreBaseClass)
+        assert isinstance(ds, DataStoreINIFile)
+        assert isinstance(section, str)
+        assert section
         assert isinstance(name, str)
         assert name
 
         # Ensure the item does not exist
-        assert not ds.has(name=name)
+        assert not ds.has(name=name, section=section)
 
         # Try to get the item (should return None)
-        assert not ds.get(name=name)
+        assert not ds.get(name=name, section=section)
 
         # Try to get the item (should return a default string)
         assert ds.get(
             name=name,
+            section=section,
             default=DEFAULT_STR_VALUE
         ) == DEFAULT_STR_VALUE
 
@@ -117,7 +124,8 @@ class TestBase():
     #
     def _assert_set(
             self,
-            ds: DataStoreBaseClass | None,
+            ds: DataStoreINIFile | None,
+            section: str = "",
             name: str = "",
             value: Any = None
     ):
@@ -125,8 +133,9 @@ class TestBase():
         Assert that the item has been set
 
         Args:
-            ds (DataStoreBaseClass): The datastore to operate on
+            ds (DataStoreINIFile): The datastore to operate on
             name (str): Name of the item
+            section (str): The section in which the item appears 
             value (Any): Value to set the item to
 
         Returns:
@@ -136,19 +145,21 @@ class TestBase():
             AssertionError:
                 when test fails
         '''
-        assert isinstance(ds, DataStoreBaseClass)
+        assert isinstance(ds, DataStoreINIFile)
+        assert isinstance(section, str)
+        assert section
         assert isinstance(name, str)
-        assert name
 
         # Ensure the item exists
-        assert ds.has(name=name)
+        assert ds.has(name=name, section=section)
 
         # Try to get the item (should return the value)
-        assert ds.get(name=name) == value
+        assert ds.get(name=name, section=section) == value
 
         # Try to get the item (should return the value)
         assert ds.get(
             name=name,
+            section=section,
             default=DEFAULT_STR_VALUE
         ) == value
 
@@ -158,7 +169,8 @@ class TestBase():
     #
     def _assert_set_enc(
             self,
-            ds: DataStoreBaseClass | None,
+            ds: DataStoreINIFile | None,
+            section: str = "",
             name: str = "",
             value: Any = None
     ):
@@ -166,8 +178,9 @@ class TestBase():
         Assert that the item has been set
 
         Args:
-            ds (DataStoreBaseClass): The datastore to operate on
+            ds (DataStoreINIFile): The datastore to operate on
             name (str): Name of the item
+            section (str): The section in which the item appears 
             value (Any): Value to set the item to
 
         Returns:
@@ -177,29 +190,32 @@ class TestBase():
             AssertionError:
                 when test fails
         '''
-        assert isinstance(ds, DataStoreBaseClass)
+        assert isinstance(ds, DataStoreINIFile)
+        assert isinstance(section, str)
+        assert section
         assert isinstance(name, str)
-        assert name
 
         # Ensure the item exists
-        assert ds.has(name=name)
+        assert ds.has(name=name, section=section)
 
         # Try to get the item (should return the encrypted string)
-        assert ds.get(name=name) != value
+        assert ds.get(name=name, section=section) != value
 
         # Try to get the item and decrypt it
-        assert ds.get(name=name, decrypt=True) == value
+        assert ds.get(name=name, section=section, decrypt=True) == value
 
         # Try to get the item with a default (should return the encrypted
         # string)
         assert ds.get(
             name=name,
+            section=section,
             default=DEFAULT_STR_VALUE
         ) != value
 
         # Try to get the item with a default and decrypt it
         assert ds.get(
             name=name,
+            section=section,
             default=DEFAULT_STR_VALUE,
             decrypt=True
         ) == value
@@ -208,12 +224,12 @@ class TestBase():
     #
     # Perform the basic tests
     #
-    def _basic_tests(self, ds: DataStoreBaseClass | None):
+    def _basic_tests(self, ds: DataStoreINIFile | None):
         '''
         Run a set of basic tests against the datastore
 
         Args:
-            ds (DataStoreBaseClass): The datastore to operate on
+            ds (DataStoreINIFile): The datastore to operate on
 
         Returns:
             None
@@ -222,29 +238,34 @@ class TestBase():
             AssertionError:
                 when test fails
         '''
-        assert isinstance(ds, DataStoreBaseClass)
+        assert isinstance(ds, DataStoreINIFile)
         
         # The item should not exist
-        self._assert_not_set(ds=ds, name=BASIC_NAME)
+        self._assert_not_set(ds=ds, name=BASIC_NAME, section=BASIC_SECTION)
 
         # Create the item and check it exists (this checks the 'get' method)
-        ds.set(name=BASIC_NAME, value=SIMPLE_STR_VALUE)
-        self._assert_set(ds=ds, name=BASIC_NAME, value=SIMPLE_STR_VALUE)
+        ds.set(name=BASIC_NAME, section=BASIC_SECTION, value=SIMPLE_STR_VALUE)
+        self._assert_set(
+            ds=ds,
+            name=BASIC_NAME,
+            section=BASIC_SECTION,
+            value=SIMPLE_STR_VALUE
+        )
 
         # Delete the item and make sure it is gone
-        ds.delete(name=BASIC_NAME)
-        self._assert_not_set(ds=ds, name=BASIC_NAME)
+        ds.delete(name=BASIC_NAME, section=BASIC_SECTION)
+        self._assert_not_set(ds=ds, name=BASIC_NAME, section=BASIC_SECTION)
 
 
     #
     # Perform the tests for an encrypted item
     #
-    def _encrypted_tests(self, ds: DataStoreBaseClass | None):
+    def _encrypted_tests(self, ds: DataStoreINIFile | None):
         '''
         Run a set of tests against an encryped item the datastore
 
         Args:
-            ds (DataStoreBaseClass): The datastore to operate on
+            ds (DataStoreINIFile): The datastore to operate on
 
         Returns:
             None
@@ -253,29 +274,40 @@ class TestBase():
             AssertionError:
                 when test fails
         '''
-        assert isinstance(ds, DataStoreBaseClass)
+        assert isinstance(ds, DataStoreINIFile)
         
         # The item should not exist
-        self._assert_not_set(ds=ds, name=BASIC_NAME)
+        self._assert_not_set(ds=ds, name=BASIC_NAME, section=BASIC_SECTION)
 
         # Create the item and check it exists (this checks the 'get' method)
-        ds.set(name=BASIC_NAME, value=SIMPLE_STR_VALUE, encrypt=True)
-        self._assert_set_enc(ds=ds, name=BASIC_NAME, value=SIMPLE_STR_VALUE)
+        ds.set(
+            name=BASIC_NAME,
+            section=BASIC_SECTION,
+            value=SIMPLE_STR_VALUE,
+            encrypt=True
+        )
+        self._assert_set_enc(
+            ds=ds,
+            name=BASIC_NAME,
+            section=BASIC_SECTION,
+            value=SIMPLE_STR_VALUE
+        )
+        
 
         # Delete the item and make sure it is gone
-        ds.delete(name=BASIC_NAME)
-        self._assert_not_set(ds=ds, name=BASIC_NAME)
+        ds.delete(name=BASIC_NAME, section=BASIC_SECTION)
+        self._assert_not_set(ds=ds, name=BASIC_NAME, section=BASIC_SECTION)
 
 
     #
     # Perform the tests for an item that expires
     #
-    def _expiry_tests(self, ds: DataStoreBaseClass | None):
+    def _expiry_tests(self, ds: DataStoreINIFile | None):
         '''
         Run a set of tests for an item that expires
 
         Args:
-            ds (DataStoreBaseClass): The datastore to operate on
+            ds (DataStoreINIFile): The datastore to operate on
 
         Returns:
             None
@@ -284,34 +316,40 @@ class TestBase():
             AssertionError:
                 when test fails
         '''
-        assert isinstance(ds, DataStoreBaseClass)
+        assert isinstance(ds, DataStoreINIFile)
 
         # The item should not exist
-        self._assert_not_set(ds=ds, name=BASIC_NAME)
+        self._assert_not_set(ds=ds, name=BASIC_NAME, section=BASIC_SECTION)
 
         # Create the item and check it exists (this checks the 'get' method)
         ds.set(
             name=BASIC_NAME,
             value=SIMPLE_STR_VALUE,
+            section=BASIC_SECTION,
             timeout=DEFAULT_TIMEOUT
         )
-        self._assert_set(ds=ds, name=BASIC_NAME, value=SIMPLE_STR_VALUE)
+        self._assert_set(
+            ds=ds,
+            name=BASIC_NAME,
+            section=BASIC_SECTION,
+            value=SIMPLE_STR_VALUE
+        )
 
         time.sleep(DEFAULT_TIMEOUT + DEFAULT_WAIT)
 
         # Make sure it is gone
-        self._assert_not_set(ds=ds, name=BASIC_NAME)
+        self._assert_not_set(ds=ds, name=BASIC_NAME, section=BASIC_SECTION)
 
 
     #
-    # Perform the tests for dot names
+    # Basic Tests - Has/Set/Get/Delete
     #
-    def _dot_name_tests(self, ds: DataStoreBaseClass | None):
+    def test_basic(self, inifile):
         '''
-        Run a set of tests using dot names
+        Basic tests
 
         Args:
-            ds (DataStoreBaseClass): The datastore to operate on
+            inifile (str): Fixture managing the ini file used during testing
 
         Returns:
             None
@@ -320,34 +358,86 @@ class TestBase():
             AssertionError:
                 when test fails
         '''
-        assert isinstance(ds, DataStoreBaseClass)
+        _ds = DataStoreINIFile(security="low", filename=inifile)
 
-        # Make sure the data store is using dot names
-        assert ds.dot_names
-
-        # Create items using dotnames
-        for _name in DOT_NAME_LIST:
-            # Append "_value" to create a astring tgo use as the value
-            _value = f"{_name}_value"
-
-            # The item should not exist
-            self._assert_not_set(ds=ds, name=_name)
-
-            # Create the item and check it exists (this checks the 'get' method)
-            ds.set(name=_name, value=_value)
-            self._assert_set(ds=ds, name=_name, value=_value)
+        self._basic_tests(ds=_ds)
 
 
-        # Test writing to an invalid dot name
-        # - trying to add a value in the lower level of a tree
-        # - Trying to add a branch when a value is set
-        for _name in INVALID_DOT_NAME_LIST:
-            with pytest.raises(KeyError):
-                ds.set(name=_name, value=DEFAULT_STR_VALUE)
+    #
+    # Encryption Tests - Use different encryption options
+    #
+    @pytest.mark.parametrize("options", ENCRYPTION_OPTION_SETS)
+    def test_encryption(self, options, inifile):
+        '''
+        Encryption tests
 
-        for _name in DOT_NAME_LIST:
-            ds.delete(name=_name)
-            self._assert_not_set(ds=ds, name=_name)
+        Args:
+            options (str): Fixture containing the key to process from the
+                OPTION_SETS dict
+            inifile (str): Fixture managing the ini file used during testing
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError:
+                when test fails
+        '''
+        assert options in ENCRYPTION_OPTION_SETS
+
+        _kwargs = ENCRYPTION_OPTION_SETS[options]
+        assert isinstance(_kwargs, dict)
+
+        _ds = DataStoreINIFile(security="low", filename=inifile, **_kwargs)
+
+        self._encrypted_tests(ds=_ds)
+
+
+    #
+    # Expiry Tests
+    #
+    def test_expiry(self, inifile):
+        '''
+        Expiry tests
+
+        Args:
+            inifile (str): Fixture managing the ini file used during testing
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError:
+                when test fails
+        '''
+        _ds = DataStoreINIFile(security="low", filename=inifile)
+
+        self._expiry_tests(ds=_ds)
+
+
+    #
+    # Dot name Tests
+    #
+    def test_dot_names(self, inifile):
+        '''
+        Dotname tests
+
+        Args:
+            inifile (str): Fixture managing the ini file used during testing
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError:
+                when test fails
+        '''
+        with pytest.raises(NotImplementedError):
+            _ = DataStoreINIFile(
+                security="low",
+                filename=inifile,
+                dot_names=True
+            )
 
 
 ###########################################################################

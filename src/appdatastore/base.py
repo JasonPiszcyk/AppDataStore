@@ -116,27 +116,28 @@ class DataStoreBaseClass():
             None
         '''
         # Private Attributes
-        self.__data: dict = {}
-        self.__data_expiry: list = []
-        self.__manual_expiry = True
+        self._data: dict = {}
+        self._data_expiry: list = []
+        self._manual_expiry = True
+        self._store_as_json = False
 
-        self.__lock = Lock()
+        self._lock = Lock()
 
         if not salt:
             salt = b"a%Z\xe9\xc3N\x96\x82\xc5|#e\xfd1b&"
 
         if isinstance(logger_name, str) and logger_name:
-            self.__logger = get_logger(name=logger_name)
+            self._logger = get_logger(name=logger_name)
 
         else:
-            self.__logger = init_console_logger(name=DEFAULT_LOGGER_NAME)
-            self.__logger.setLevel(level=logger_level)
+            self._logger = init_console_logger(name=DEFAULT_LOGGER_NAME)
+            self._logger.setLevel(level=logger_level)
 
-        self.__logger.debug("Creating Encryption Key")
+        self._logger.debug("Creating Encryption Key")
         self._salt, self._key = crypto_tools.fernet.derive_key(
             salt=salt, password=password, security=security
         )
-        self.__logger.debug("Encryption Key has been created")
+        self._logger.debug("Encryption Key has been created")
 
         self._dot_names = dot_names
 
@@ -159,13 +160,52 @@ class DataStoreBaseClass():
 
     ###########################################################################
     #
+    # Processing Methods
+    #
+    ###########################################################################
+    def _filter_keys(
+            self,
+            keys: list = [],
+            prefix: str = ""
+    ) -> list:
+        '''
+        Filter the list of keys via the prefix
+
+        Args:
+            keys (list): A list of keys to be filtered
+            prefix (str): Match any keys beginning with this str
+        
+        Returns:
+            list: The list filtered by the prefix
+
+        Raises:
+            AssertionError
+                when keys is not a list
+                when prefix is not a string
+        '''
+        assert isinstance(keys, list), "keys must be a list"
+        assert isinstance(prefix, str), "prefix must be a string"
+
+        if not prefix:
+            return keys.copy()
+        
+        _filtered_list = []
+        for _entry in keys:
+            if str(_entry).find(prefix, 0) == 0:
+                _filtered_list.append(_entry)
+
+        return _filtered_list
+
+
+    ###########################################################################
+    #
     # Maintenance Functions
     #
     ###########################################################################
     #
-    # __item_maintenance
+    # _item_maintenance
     #
-    def __item_maintenance(self):
+    def _item_maintenance(self):
         '''
         Perform maintenance on items (such as expiry)
 
@@ -178,218 +218,39 @@ class DataStoreBaseClass():
         Raises:
             None
         '''
-        self.__logger.debug("Start item maintenance")
+        self._logger.debug("Start item maintenance")
 
-        if self.__manual_expiry:
-            self.__logger.debug("Begin manual expiry processing")
+        if self._manual_expiry:
+            self._logger.debug("Begin manual expiry processing")
 
             # Process the expiry list
             _now = timestamp()
-            _sorted_expiry_list = sorted(self.__data_expiry)
+            _sorted_expiry_list = sorted(self._data_expiry)
 
             # Use the copy of __data_expiry list as it can change it during
             # processing
             for _entry in _sorted_expiry_list:
                 # Extract the timestamp from the key
                 _timestamp_str, _, _name = str(_entry).partition("__")
-                _timestamp = set_value(_timestamp_str, DataType.INT, default=0)            
+                _timestamp = set_value(
+                    data=_timestamp_str,
+                    type=DataType.INT,
+                    default=0
+                )
 
                 # Stop processing if the timestamp is in the future
                 if _now < _timestamp: break
 
                 # Remove the entry (and the expiry record)
-                self.__logger.info(f"Expiring entry: {self.__data[_name]}")
-                self.__lock.acquire()
-                if _name in self.__data: del self.__data[_name]
-                self.__data_expiry.remove(_entry)
-                self.__lock.release()
+                self._logger.info(f"Expiring entry: {self._data[_name]}")
+                self._lock.acquire()
+                if _name in self._data: del self._data[_name]
+                self._data_expiry.remove(_entry)
+                self._lock.release()
 
-            self.__logger.debug("End manual expiry processing")
+            self._logger.debug("End manual expiry processing")
 
-        self.__logger.debug("End item maintenance")
-
-
-    ###########################################################################
-    #
-    # Data Access
-    #
-    ###########################################################################
-    #
-    # has
-    #
-    def has(
-            self,
-            name: str = ""
-    ) -> bool:
-        '''
-        Check if the item exists in the datastore
-
-        Args:
-            name (str): The name of the item to check
-
-        Returns:
-            bool: True if the item exists, False otherwise
-
-        Raises:
-            None
-        '''
-        self.__item_maintenance()
-        return name in self.__data
-
-
-    #
-    # get
-    #
-    def get(
-            self,
-            name: str = "",
-            default: Any = None,
-            decrypt: bool = False
-    ) -> Any:
-        '''
-        Get a value
-
-        Args:
-            name (str): The name of the item to get
-            default (Any): Value to return if the item cannot be found
-            decrypt (bool): If True, attempt to decrypt the value
-
-        Returns:
-            Any: The value of the item
-
-        Raises:
-            None
-        '''
-        if not self.has(name): return default
-
-        _value = self.__data[name]
-
-        if decrypt:
-            # Decrypt, convert from JSON
-            _decrypted_value = self._decrypt(_value)
-            _value = from_json(_decrypted_value)
-
-        return _value
-
-
-    #
-    # set
-    #
-    def set(
-            self,
-            name: str = "",
-            value: Any = None,
-            encrypt: bool = False,
-            timeout: int = 0
-    ) -> None:
-        '''
-        Set a value for an item
-
-        Args:
-            name (str): The name of the item to set
-            value (Any): Value to set the item to
-            encrypt (bool): If True, attempt to encrypt the value
-            timeout (int): The number of seconds before the item should be
-                deleted (0 = never delete)
-
-        Returns:
-            None
-
-        Raises:
-            AssertionError:
-                When timeout is not zero or a positive integer
-            KeyError:
-                When the dot name is a low part of a hierarchy
-        '''
-        assert isinstance(timeout, int), "Timeout value must be an integer"
-        assert timeout >= 0, "Timeout value must be a postive integer"
-
-        self.__item_maintenance()
-
-        # Check on dot names
-        if self._dot_names:
-            _keys = list(self.__data.keys())
-            if not self._check_dot_name(keys=_keys, name=name):
-                raise KeyError(
-                    "Value cannot be stored in a intermediate dot level name"
-                )
-
-        # Encrypt the value if required
-        if encrypt:
-            # Convert to JSON, Encrypt
-            _json_value = to_json(value)
-            value = self._encrypt(_json_value)
-
-        # Set the value
-        self.__lock.acquire()
-        self.__data[name] = value
-
-        # Set the expiry info for the item if required
-        if timeout > 0:
-            _timestamp = timestamp(offset=timeout)
-
-            # Append the item name to prevent duplicate keys/timestamps
-            self.__data_expiry.append(f"{_timestamp}__{name}")
-
-        self.__lock.release()
-
-
-    #
-    # delete
-    #
-    def delete(
-            self,
-            name: str = ""
-    ) -> None:
-        '''
-        Delete an item from the datastore
-
-        Args:
-            name (str): The name of the item to delete
-
-        Returns:
-            Any: The value of the item
-
-        Raises:
-            None
-        '''
-        if self.has(name):
-            self.__lock.acquire()
-            del self.__data[name]
-            self.__lock.release()
-
-
-    #
-    # list
-    #
-    def list(
-            self,
-            prefix: str = ""
-    ) -> list:
-        '''
-        Return a list of keys in the datastore
-
-        Args:
-            prefix (str): Will try to match any keys beginning with this str.
-
-        Returns:
-            list: The list of items
-
-        Raises:
-            None
-        '''
-        self.__item_maintenance()
-        _key_list = list(self.__data.keys())
- 
-        if not prefix:
-            return _key_list
-        
-        _filtered_list = []
-        for _entry in _key_list:
-            if str(_entry).find(prefix, 0) == 0:
-                _filtered_list.append(_entry)
-
-        return _filtered_list
+        self._logger.debug("End item maintenance")
 
 
     ###########################################################################
@@ -398,83 +259,96 @@ class DataStoreBaseClass():
     #
     ###########################################################################
     #
-    # _encrypt
+    # _encode
     #
-    def _encrypt(
+    def _encode(
             self,
-            value: str = ""
-    ) -> str:
+            value: Any = None,
+            encrypt: bool = False
+    ) -> Any:
         '''
-        Encrypt the value
+        Encode the value for storage, possible encrypting it
             
         Args:
-            value (str): A value to be encrypted. Should generally be a JSON
-                string.
+            value (str): A value to be encoded.
+            encrypt (bool): whether or not to encrypt the value
         
         Returns:
-            string: The encrypted string
+            Any: The value in the format to be stored
 
         Raises:
-            TypeError
-                When value is not of type str
+            None
         '''
-        # Check the type of the value provided
-        if not isinstance(value, str):
-            raise TypeError(
-                f"Cannot encrypt data type: {type(value)}"
-            )
+        if encrypt:
+            _json_value = to_json(value)
+            _byte_data = _json_value.encode(ENCODE_METHOD)
+            __value_to_store = crypto_tools.fernet.encrypt(
+                data=_byte_data,
+                key=self._key
+            ).decode(ENCODE_METHOD)
 
-        _byte_data = value.encode(ENCODE_METHOD)
-        _encrypted_string = crypto_tools.fernet.encrypt(
-            data=_byte_data,
-            key=self._key
-        ).decode(ENCODE_METHOD)
+        elif self._store_as_json:
+            __value_to_store = to_json(value)
 
-        if not _encrypted_string:
-            return ""
         else:
-            return _encrypted_string
+            __value_to_store = value
+
+        return __value_to_store
 
 
     #
-    # _decrypt
+    # _decode
     #
-    def _decrypt(
+    def _decode(
             self,
-            value: str = ""
-    ) -> str:
+            value: Any = None,
+            decrypt: bool = False
+    ) -> Any:
         '''
         Decrypt the value
             
         Args:
-            value (str): A value to be decrypted
+            value (Any): A value to be decoded
+            encrypt (bool): whether or not the value needs to be decrypted
         
         Returns:
-            string: The decrypted string
+            Any: The decoded value
 
         Raises:
             TypeError
-                When value is not of type str
+                When value is not of type str if decrypting or JSON
         '''
-         # Check the type of the value provided
-        if not isinstance(value, str):
-            raise TypeError(
-                f"Cannot decrypt data type: {type(value)}"
+        _decoded_val = None
+
+        if decrypt:
+            # Check the type of the value provided
+            if not isinstance(value, str):
+                raise TypeError(
+                    f"Cannot decrypt data type: {type(value)}"
+                )
+
+            _byte_data = str(value).encode(ENCODE_METHOD)
+            _decrypted_bytes = crypto_tools.fernet.decrypt(
+                data=_byte_data,
+                key=self._key
             )
 
-        _byte_data = str(value).encode(ENCODE_METHOD)
-        _decrypted_bytes = crypto_tools.fernet.decrypt(
-            data=_byte_data,
-            key=self._key
-        )
+            _decrypted_val = ""
+            if _decrypted_bytes:
+                try:
+                    _decrypted_val = _decrypted_bytes.decode(ENCODE_METHOD)
+                except:
+                    pass
 
-        if _decrypted_bytes:
-            try:
-                return _decrypted_bytes.decode(ENCODE_METHOD)
-            except:
-                pass
+            _decoded_val = from_json(data=_decrypted_val)
 
-        return ""
+        elif self._store_as_json:
+            _decoded_val = from_json(data=value)
+
+        else:
+            _decoded_val = value
+
+        return _decoded_val
 
 
     ###########################################################################
@@ -521,6 +395,175 @@ class DataStoreBaseClass():
 
     ###########################################################################
     #
+    # Data Access
+    #
+    ###########################################################################
+    #
+    # has
+    #
+    def has(
+            self,
+            name: str = ""
+    ) -> bool:
+        '''
+        Check if the item exists in the datastore
+
+        Args:
+            name (str): The name of the item to check
+
+        Returns:
+            bool: True if the item exists, False otherwise
+
+        Raises:
+            None
+        '''
+        self._item_maintenance()
+        return name in self._data
+
+
+    #
+    # get
+    #
+    def get(
+            self,
+            name: str = "",
+            default: Any = None,
+            decrypt: bool = False
+    ) -> Any:
+        '''
+        Get a value
+
+        Args:
+            name (str): The name of the item to get
+            default (Any): Value to return if the item cannot be found
+            decrypt (bool): If True, attempt to decrypt the value
+
+        Returns:
+            Any: The value of the item
+
+        Raises:
+            None
+        '''
+        if not self.has(name): return default
+
+        _value = self._data[name]
+
+        _decoded_value = self._decode(value=_value, decrypt=decrypt)
+
+        return _decoded_value
+
+
+    #
+    # set
+    #
+    def set(
+            self,
+            name: str = "",
+            value: Any = None,
+            encrypt: bool = False,
+            timeout: int = 0
+    ) -> None:
+        '''
+        Set a value for an item
+
+        Args:
+            name (str): The name of the item to set
+            value (Any): Value to set the item to
+            encrypt (bool): If True, attempt to encrypt the value
+            timeout (int): The number of seconds before the item should be
+                deleted (0 = never delete)
+
+        Returns:
+            None
+
+        Raises:
+            AssertionError:
+                When timeout is not zero or a positive integer
+            KeyError:
+                When the dot name is a low part of a hierarchy
+        '''
+        assert isinstance(timeout, int), "Timeout value must be an integer"
+        assert timeout >= 0, "Timeout value must be a postive integer"
+
+        self._item_maintenance()
+
+        # Check on dot names
+        if self._dot_names:
+            _keys = list(self._data.keys())
+            if not self._check_dot_name(keys=_keys, name=name):
+                raise KeyError(
+                    "Value cannot be stored in a intermediate dot level name"
+                )
+
+        # Encode the value for storage (possibly encrypting)
+        _value_to_store = self._encode(value=value, encrypt=encrypt)
+
+        # Set the value
+        self._lock.acquire()
+        self._data[name] = _value_to_store
+
+        # Set the expiry info for the item if required
+        if timeout > 0:
+            _timestamp = timestamp(offset=timeout)
+
+            # Append the item name to prevent duplicate keys/timestamps
+            self._data_expiry.append(f"{_timestamp}__{name}")
+
+        self._lock.release()
+
+
+    #
+    # delete
+    #
+    def delete(
+            self,
+            name: str = ""
+    ) -> None:
+        '''
+        Delete an item from the datastore
+
+        Args:
+            name (str): The name of the item to delete
+
+        Returns:
+            Any: The value of the item
+
+        Raises:
+            None
+        '''
+        if self.has(name):
+            self._lock.acquire()
+            del self._data[name]
+            self._lock.release()
+
+
+    #
+    # list
+    #
+    def list(
+            self,
+            prefix: str = ""
+    ) -> list:
+        '''
+        Return a list of keys in the datastore
+
+        Args:
+            prefix (str): Will try to match any keys beginning with this str.
+
+        Returns:
+            list: The list of items
+
+        Raises:
+            None
+        '''
+        self._item_maintenance()
+        _key_list = list(self._data.keys())
+ 
+        return self._filter_keys(keys=_key_list, prefix=prefix)
+
+
+    ###########################################################################
+    #
     # Export Functions
     #
     ###########################################################################
@@ -548,11 +591,11 @@ class DataStoreBaseClass():
             None
         '''
         # Convert to JSON
-        self.__logger.debug("Exporting Datastore to JSON")
+        self._logger.debug("Exporting Datastore to JSON")
         _export_data = {}
 
         # Transform the data to a straight dict
-        _key_list = sorted(list(self.__data.keys()))
+        _key_list = sorted(list(self._data.keys()))
 
         for _key in _key_list:
             # If dot names, handle the hierarchy

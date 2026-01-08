@@ -16,10 +16,10 @@ Not yet Published to PyPi
 ## Features
 
 **AppDataStore** consists of a number of sub-modules, being:
-- Global
-  - A global class for storing variable information
+- Mem
+  - A memory based datastore for storing information within a process
 - Shared
-  - Implementation of list add dict in shared memory to allow sharing between threads/processes
+  - Implementation of 'list' and 'dict' in shared memory to allow sharing between threads/processes
 - INI
   - Datastore implemented as an INI file
 - REDIS
