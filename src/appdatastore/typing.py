@@ -34,7 +34,6 @@ import enum
 # Local app modules
 
 # Imports for python variable type hints
-from typing import Any
 
 
 ###########################################################################
@@ -42,6 +41,12 @@ from typing import Any
 # Types
 #
 ###########################################################################
+#
+# DataType
+#
+class SerialisationType(enum.Enum):
+    JSON            = "json"
+    PICKLE          = "pickle"
 
 
 ###########################################################################

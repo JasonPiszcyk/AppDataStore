@@ -38,6 +38,7 @@ import configparser
 from appdatastore.base import DataStoreBaseClass
 from appcore.helpers import timestamp
 from appcore.conversion import DataType, set_value, to_json
+from appdatastore.typing import SerialisationType
 
 # Imports for python variable type hints
 from typing import Any
@@ -121,6 +122,11 @@ class DataStoreINIFile(DataStoreBaseClass):
         # Private Attributes
         self.__filename: str = filename
 
+        # Always store values serialised (ConfigParser treats everything as
+        # strings)
+        self._store_serialised = True
+        self._serialisation_method = SerialisationType.JSON
+
         # Attributes
 
 
@@ -192,10 +198,15 @@ class DataStoreINIFile(DataStoreBaseClass):
             config.write(configfile)
 
 
+    ###########################################################################
     #
-    # _item_maintenance
+    # Maintenance Functions
     #
-    def _item_maintenance(self):
+    ###########################################################################
+    #
+    # maintenance
+    #
+    def maintenance(self):
         '''
         Perform maintenance on items (such as expiry)
 
@@ -285,7 +296,7 @@ class DataStoreINIFile(DataStoreBaseClass):
         Raises:
             None
         '''
-        self._item_maintenance()
+        self.maintenance()
 
         _config = self.__read_ini()
         return _config.has_section(section)
@@ -296,8 +307,8 @@ class DataStoreINIFile(DataStoreBaseClass):
     #
     def has(
             self,
-            name: str = "",
-            section: str = ""
+            section: str = "",
+            name: str = ""
     ) -> bool:
         '''
         Check if the item exists in the datastore
@@ -305,8 +316,8 @@ class DataStoreINIFile(DataStoreBaseClass):
         Need to override the base class implementation to handle sections
 
         Args:
-            name (str): The name of the item to check
             section (str): The section in which the item appears
+            name (str): The name of the item to check
 
         Returns:
             bool: True if the item exists, False otherwise
@@ -314,7 +325,7 @@ class DataStoreINIFile(DataStoreBaseClass):
         Raises:
             None
         '''
-        self._item_maintenance()
+        self.maintenance()
 
         _config = self.__read_ini()
         return _config.has_option(section, name)
@@ -325,10 +336,10 @@ class DataStoreINIFile(DataStoreBaseClass):
     #
     def get(
             self,
+            section: str = "",
             name: str = "",
             default: Any = None,
-            decrypt: bool = False,
-            section: str = ""
+            decrypt: bool = False
     ) -> Any:
         '''
         Get a value
@@ -336,10 +347,10 @@ class DataStoreINIFile(DataStoreBaseClass):
         Need to override the base class implementation to handle sections
 
         Args:
+            section (str): The section in which the item appears
             name (str): The name of the item to get
             default (Any): Value to return if the item cannot be found
             decrypt (bool): If True, attempt to decrypt the value
-            section (str): The section in which the item appears
 
         Returns:
             Any: The value of the item
@@ -347,7 +358,7 @@ class DataStoreINIFile(DataStoreBaseClass):
         Raises:
             None
         '''
-        self._item_maintenance()
+        self.maintenance()
 
         _config = self.__read_ini()
         _value = _config.get(section, name, fallback=default)
@@ -362,11 +373,11 @@ class DataStoreINIFile(DataStoreBaseClass):
     #
     def set(
             self,
+            section: str = "",
             name: str = "",
             value: Any = None,
             encrypt: bool = False,
-            timeout: int = 0,
-            section: str = ""
+            timeout: int = 0
     ) -> None:
         '''
         Set a value for an item
@@ -374,12 +385,12 @@ class DataStoreINIFile(DataStoreBaseClass):
         Need to override the base class implementation to handle sections
 
         Args:
+            section (str): The section in which the item appears
             name (str): The name of the item to set
             value (Any): Value to set the item to
             encrypt (bool): If True, attempt to encrypt the value
             timeout (int): The number of seconds before the item should be
                 deleted (0 = never delete)
-            section (str): The section in which the item appears
 
         Returns:
             None
@@ -391,7 +402,7 @@ class DataStoreINIFile(DataStoreBaseClass):
         assert isinstance(timeout, int), "Timeout value must be an integer"
         assert timeout >= 0, "Timeout value must be a postive integer"
 
-        self._item_maintenance()
+        self.maintenance()
 
         # Encode the value for storage (possibly encrypting)
         _value_to_store = self._encode(value=value, encrypt=encrypt)
@@ -420,8 +431,8 @@ class DataStoreINIFile(DataStoreBaseClass):
     #
     def delete(
             self,
-            name: str = "",
             section: str = "",
+            name: str = ""
     ) -> None:
         '''
         Delete an item from the datastore
@@ -429,8 +440,8 @@ class DataStoreINIFile(DataStoreBaseClass):
         Need to override the base class implementation to handle sections
 
         Args:
-            name (str): The name of the item to delete
             section (str): The section in which the item appears
+            name (str): The name of the item to delete
 
         Returns:
             Any: The value of the item
@@ -438,7 +449,7 @@ class DataStoreINIFile(DataStoreBaseClass):
         Raises:
             None
         '''
-        self._item_maintenance()
+        self.maintenance()
 
         self._lock.acquire()
 
@@ -466,8 +477,8 @@ class DataStoreINIFile(DataStoreBaseClass):
     #
     def list(
             self,
-            prefix: str = "",
-            section: str = ""
+            section: str = "",
+            prefix: str = ""
     ) -> list:
         '''
         Return a list of keys in the datastore
@@ -475,9 +486,9 @@ class DataStoreINIFile(DataStoreBaseClass):
         Need to override the base class implementation to handle sections
 
         Args:
-            prefix (str): Will try to match any keys beginning with this str.
             section (str): If not provided, a list of sections is returned.
-                If  provided, all entries in the section are returned.
+                If provided, all entries in the section are returned.
+            prefix (str): Will try to match any keys beginning with this str.
 
         Returns:
             list: The list of sections or items
@@ -487,7 +498,7 @@ class DataStoreINIFile(DataStoreBaseClass):
         '''
         _key_list = []
 
-        self._item_maintenance()
+        self.maintenance()
         _config = self.__read_ini()
  
         if not section:
@@ -505,7 +516,7 @@ class DataStoreINIFile(DataStoreBaseClass):
     #
     # delete_file
     #
-    def delete_file(self ) -> None:
+    def delete_file(self) -> None:
         '''
         Delete the INI File
 
