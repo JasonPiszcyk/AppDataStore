@@ -17,6 +17,7 @@ classifiers = [
 ]
 dependencies = [
   "pytest",
+  "appcore @ git+https://github.com/JasonPiszcyk/AppCore",
   "crypto_tools @ git+https://github.com/JasonPiszcyk/CryptoTools",
 ]
 

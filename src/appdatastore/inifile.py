@@ -34,10 +34,11 @@ from __future__ import annotations
 import os
 import configparser
 
-# Local app modules
-from appdatastore.base import DataStoreBaseClass
 from appcore.helpers import timestamp
 from appcore.conversion import DataType, set_value, to_json
+
+# Local app modules
+from appdatastore.base import DataStoreBaseClass
 from appdatastore.typing import SerialisationType
 
 # Imports for python variable type hints
