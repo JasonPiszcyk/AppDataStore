@@ -166,16 +166,19 @@ class DataStoreBaseClass():
     # Processing Methods
     #
     ###########################################################################
-    def _filter_keys(
+    #
+    # _filter_items
+    #
+    def _filter_items(
             self,
-            keys: list = [],
+            items: list = [],
             prefix: str = ""
     ) -> list:
         '''
         Filter the list of keys via the prefix
 
         Args:
-            keys (list): A list of keys to be filtered
+            items (list): A list of items to be filtered
             prefix (str): Match any keys beginning with this str
         
         Returns:
@@ -186,14 +189,14 @@ class DataStoreBaseClass():
                 when keys is not a list
                 when prefix is not a string
         '''
-        assert isinstance(keys, list), "keys must be a list"
+        assert isinstance(items, list), "items must be a list"
         assert isinstance(prefix, str), "prefix must be a string"
 
         if not prefix:
-            return keys.copy()
+            return items.copy()
         
         _filtered_list = []
-        for _entry in keys:
+        for _entry in items:
             if str(_entry).find(prefix, 0) == 0:
                 _filtered_list.append(_entry)
 

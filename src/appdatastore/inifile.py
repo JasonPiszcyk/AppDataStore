@@ -489,7 +489,7 @@ class DataStoreINIFile(DataStoreBaseClass):
         Args:
             section (str): If not provided, a list of sections is returned.
                 If provided, all entries in the section are returned.
-            prefix (str): Will try to match any keys beginning with this str.
+            prefix (str): Will try to match any items beginning with this str.
 
         Returns:
             list: The list of sections or items
@@ -497,21 +497,21 @@ class DataStoreINIFile(DataStoreBaseClass):
         Raises:
             None
         '''
-        _key_list = []
+        _item_list = []
 
         self.maintenance()
         _config = self.__read_ini()
  
         if not section:
             # Get a list of sections
-           _key_list = list(_config.sections())
+           _items_list = list(_config.sections())
 
         else:
             # Get list of entries in the section
             if _config.has_section(section):
-                _key_list = list(_config.options(section))
+                _item_list = list(_config.options(section))
 
-        return self._filter_keys(keys=_key_list, prefix=prefix)
+        return self._filter_items(items=_item_list, prefix=prefix)
 
 
     #

@@ -357,9 +357,9 @@ class DataStoreMem(DataStoreBaseClass):
             None
         '''
         self.maintenance()
-        _key_list = list(self._data.keys())
+        _item_list = list(self._data.keys())
  
-        return self._filter_keys(keys=_key_list, prefix=prefix)
+        return self._filter_items(items=_item_list, prefix=prefix)
 
 
     ###########################################################################

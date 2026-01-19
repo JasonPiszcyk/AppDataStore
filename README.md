@@ -20,9 +20,7 @@ Not yet Published to PyPi
   - A memory based datastore for storing information within a process.
 - [Shared Mem](#shared-mem-usage)
   - Implementation of data store in shared memory to allow sharing between threads/processes.
-  - Has 2 different modes for accessing shred memory segments:
-    - Datastore: Opens and closes the shared memory on each access and maintains control over access.  When writing, will always create a new segment to ensure the size is set correctly.  This is slower but safer.
-    - Fast: Shared memory must be explicitly opened and closed.  Can lead to memory leaks.  Datastore mode wraps 'fast' mode functions for safety.
+  - Also implements a single item shared memory interface DataStoreSharedMemItem
 - [INI File](#ini-file-usage)
   - Datastore implemented as an INI file.
 - REDIS
@@ -81,15 +79,22 @@ pip install "appdatastore @ git+https://github.com/JasonPiszcyk/AppDataStore"
 | **logger_name** (str) | The name of the logger to use.  If empty (or not a string) then a logger will be created to log to the console |
 | **logger_level** (str) | If no logger name is provided, the created logger will be set to log events at or above this level (default = "CRITICAL") |
 
+### <a id="common-properties"></a>Common Properties
+| Property | Description |
+| - | - |
+| **dot_names** (str) [ReadOnly] | If True, dot names are used to create a hierarchy of values for this data store |
 
 ### <a id="mem-usage"></a>Mem
 *class* AppDataStore.**DataStoreMem**(***Common Arguments***)
 
 Common arguments as per [Common Arguments](#common-arguments)
 
+Common properties as per [Common Properties](#common-properties)
+
+
 **maintenance()**
 <div style="padding-left: 30px;">
-  Perform maintenance on items (such as expiry).  It is generally not necesary to call this function as it call whenever the DS is accessed.
+  Perform maintenance on items (such as expiry).  It is generally not necesary to call this function as it call whenever the datastore is accessed.
 </div>
 &nbsp
 
@@ -146,7 +151,7 @@ Common arguments as per [Common Arguments](#common-arguments)
 <div style="padding-left: 30px;">
   <table>
     <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>list</b> (str)</td><td>Match any item names beginning with this</td></tr>
+    <tr><td><b>prefix</b> (str)</td><td>Match any item names beginning with this string</td></tr>
   </table>
 
   List the items in the data store.  If *prefix* is provided, the list will be restricted to those item names that start with *prefix*.
@@ -165,9 +170,201 @@ Common arguments as per [Common Arguments](#common-arguments)
 
 
 ### <a id="shared-mem-usage"></a>Shared Mem
-*class* AppDataStore.**DataStoreSharedMem**(***Common Arguments***)
+*class* AppDataStore.**DataStoreSharedMemItem**(*name="", size=1, logger_name="", logger_level="CRITICAL"*)
+
+| Argument | Description |
+| - | - |
+| **name** (str) | The name of the item/shared memory segment |
+| **size** (str) | The requested size of the shared memory segment if it needs to be created, or ignored if connecting to existing segment  (default = 1) |
+| **logger_name** (str) | The name of the logger to use.  If empty (or not a string) then a logger will be created to log to the console |
+| **logger_level** (str) | If no logger name is provided, the created logger will be set to log events at or above this level (default = "CRITICAL") |
+
+| Property | Description |
+| - | - |
+| **name** (str) [ReadOnly] | The name of the item/shared memory segment |
+| **size** (str) [ReadOnly] | The size of the shared memory segment (which maybe larger than the requested size when it was created) |
+
+**open()**
+<div style="padding-left: 30px;">
+  Connect to the shared memory segment (if is has been closed) or create a new segment (if it has never been created or has been unlinked). This is called automatically when the instance is created.
+</div>
+&nbsp
+
+**close()**
+<div style="padding-left: 30px;">
+  Disconnect from shared memory segment.
+</div>
+&nbsp
+
+**delete()**
+<div style="padding-left: 30px;">
+  Disconnect from shared memory segment and delete it. The segment will no longer be accessible for remote processes.
+</div>
+&nbsp
+
+**get()**
+<div style="padding-left: 30px;">
+  Get the raw value (in bytes) from the shared memory segment. The segment is locked during the write of the value.
+</div>
+&nbsp
+
+**set(** value=b"" **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>value</b> (bytes)</td><td>The raw value, in bytes, to store in the shared memory segment</td></tr>
+  </table>
+
+  Store a value in the shared memory segment.
+</div>
+
+**update(** function=None **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>function</b> (Callable)</td><td>A function to transform the stored value to the new value. Must accept the current value as bytes and return the new value as bytes</td></tr>
+  </table>
+
+  Perform an atomic update using the mutation function provided.  The item is locked before the value is read until the function completes and the result is written.
+</div>
+
+```python
+# Example usage of Shared Memory Item
+from appdatastore.shared_mem_item import (
+  DataStoreSharedMemItem,
+  shared_memory_exists
+)
+
+# More useful to use a pickle, etc
+byte_val = b"A simple value"
+
+# Create the Item in Process 1
+shm = DataStoreSharedMemItem(name="Test Value", size=len(byte_val))
+
+# Connect to existing item Process 2
+shm = DataStoreSharedMemItem(name="Test Value", size=len(byte_val))
+
+# Get size
+shm_size = shm.size     # Might be a page size like 16384 NOT size of value
+
+# Add a value
+shm.set(value=byte_val)
+
+# Get the value
+stored_val = shm.get()  # Will be = b"A simple value"
+
+# Modify the value
+def mutate_function(old_value):
+  new_value = old_value + b" plus some extra words"
+  return new_value
+
+shm.update(func=mutate_function)
+
+# Get the value
+updated_val = shm.get()  # Will be = b"A simple value plus some extra words"
+
+# Disconnect in Process 2
+shm.close()
+
+# Delete in Process 1
+shm.delete()
+```
+
+*class* AppDataStore.**DataStoreSharedMem**(***Common Arguments***, *name="", encrypt_index=False, index_size=16384, delete_on_cleanup=False*)
 
 Common arguments as per [Common Arguments](#common-arguments)
+
+| Argument | Description |
+| - | - |
+| **name** (str) | Name of the data store |
+| **encrypt_index** (bool) | Encrypt the index when storing it in shared memory (default = False) |
+| **index_size** (int) | The size of the index (default = 16384).  Can be increased if a large number of items (> 100) are being stored |
+| **delete_on_cleanup** (bool) | If True, unlink all shared memory segments when the cleanup function is called, or when the datastore is no longer used (default = False) |
+
+Common properties as per [Common Properties](#common-properties)
+
+| Property | Description |
+| - | - |
+| **name** (str) [ReadOnly] | The name of the datastore|
+| **index_size** (str) [ReadOnly] | The size of the index shared memory segment (which maybe larger than the requested size when it was created) |
+
+
+**maintenance()**
+<div style="padding-left: 30px;">
+  Perform maintenance on items (such as expiry).  It is generally not necesary to call this function as it call whenever the datastore is accessed.
+</div>
+&nbsp
+
+**has(** name="" **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>name</b> (str)</td><td>The name of the item to check</td></tr>
+  </table>
+
+  Check if the item represented by *name* exists in the datastore.
+</div>
+
+
+**get(** name="", default=None, decrypt=False **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>name</b> (str)</td><td>The name of the item to get</td></tr>
+    <tr><td><b>default</b> (Any)</td><td>Value to return if the item cannot be found</td></tr>
+    <tr><td><b>decrypt</b> (bool)</td><td>If True, attempt to decrypt the value</td></tr>
+  </table>
+
+  Get the item represented by *name* in the datastore, optionally trying to decrypt the encrypted stored value.  If not found, return the value specified in *default*.
+</div>
+
+
+**set(** name="", value=Any, encrypt=False, timeout=0 **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>name</b> (str)</td><td>The name of the item to set</td></tr>
+    <tr><td><b>value</b> (Any)</td><td>The value to set the item to</td></tr>
+    <tr><td><b>encrypt</b> (bool)</td><td>If True, encrypt the value before storing it</td></tr>
+    <tr><td><b>timeout</b> (int)</td><td>The number of seconds before the item should be deleted (0 = never delete)</td></tr>
+  </table>
+
+  Set the item represented by *name* in the datastore to *value*. If *encrypt* is True, encrypt the item before storing.  If *timeout* is non-zero, delete the item after *timeout* seconds.
+</div>
+
+
+**delete(** name="" **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>name</b> (str)</td><td>The name of the item to delete</td></tr>
+  </table>
+
+  Delete the item represented by *name* from the datastore.
+</div>
+
+
+**list(** prefix="" **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>prefix</b> (str)</td><td>Match any item names beginning with this string</td></tr>
+  </table>
+
+  List the items in the data store.  If *prefix* is provided, the list will be restricted to those item names that start with *prefix*.
+</div>
+
+
+**export_to_json(** container=True **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>container</b> (bool)</td><td>If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values.</td></tr>
+  </table>
+
+  Export the items in the data store to a JSON format.  If *container* is True, additional non-standard information is added to assist with data typing.
+</div>
+
 
 ### <a id="ini-file-usage"></a>INI File
 *class* AppDataStore.**DataStoreINIFile**(***Common Arguments***, *filename=""*)
@@ -177,6 +374,12 @@ Common arguments as per [Common Arguments](#common-arguments)
 | Argument | Description |
 | - | - |
 | **filename** (str) | The path for the INI file |
+
+Common properties as per [Common Properties](#common-properties)
+
+| Property | Description |
+| - | - |
+| **filename** (str) [ReadOnly] | The path for the INI file |
 
 **maintenance()**
 <div style="padding-left: 30px;">

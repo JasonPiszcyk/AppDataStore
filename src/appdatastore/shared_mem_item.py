@@ -144,7 +144,7 @@ class DataStoreSharedMemItem():
         # Private Attributes
         self._name = name
         self._shm = None
-        self._lock_name = f"{name}_lock"
+        self._lock_name = f"{name}_item_lock"
         self._lock = None
 
         if isinstance(logger_name, str) and logger_name:
