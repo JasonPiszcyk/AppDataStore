@@ -29,19 +29,20 @@ from __future__ import annotations
 # Shared variables, constants, etc
 
 # System Modules
-from multiprocessing.shared_memory import SharedMemory
-
 from appcore.helpers import timestamp
-from appcore.conversion import to_json, from_json, to_pickle, from_pickle
+from appcore.conversion import to_json
 
 # Local app modules
 from appdatastore.base import DataStoreBaseClass
-from appdatastore.shared_mem_item import DataStoreSharedMemItem
+from appdatastore.shared_mem_item import (
+    DataStoreSharedMemItem,
+    SHARED_ITEM_NAME_MAX
+)
 from appdatastore.typing import SerialisationType
 
 # Imports for python variable type hints
 from typing import Any
-from multiprocessing.synchronize import Lock as LockType
+
 
 ###########################################################################
 #
@@ -56,9 +57,13 @@ from multiprocessing.synchronize import Lock as LockType
 #
 # Constants
 #
-DEFAULT_SHARED_MEM_NAME = "AppDataStore_SharedMem"
+DEFAULT_SHARED_MEM_NAME = "AppDS_SHM"
 DEFAULT_INDEX_SIZE = 16384      # 16K
 
+INDEX_SUFFIX = "I"
+EXPIRY_DICT_SUFFIX = "E"
+
+SHARED_MEM_NAME_MAX = SHARED_ITEM_NAME_MAX - len(INDEX_SUFFIX)
 
 #
 # Global Variables
@@ -117,12 +122,16 @@ class DataStoreSharedMem(DataStoreBaseClass):
 
         Raises:
             AssertionError
-                When name is not a string
+                When name is not a string or is greater than
+                    SHARED_MEM_NAME_MAX characters
                 When encrypt_index is not a bool
             TypeError
                 When share memory creation fails
         '''
         assert isinstance(name, str), "name must be a string"
+        assert len(name) <= SHARED_MEM_NAME_MAX, (
+            f"name can be at most {SHARED_MEM_NAME_MAX} characters"
+        )
         assert isinstance(encrypt_index, bool), "encrypt_index must be a bool"
         assert isinstance(index_size, int), "index_size must be an int"
         assert isinstance(delete_on_cleanup, bool), (
@@ -145,19 +154,28 @@ class DataStoreSharedMem(DataStoreBaseClass):
         # Private Attributes
         self._name = name or DEFAULT_SHARED_MEM_NAME
         self._encrypt_index = encrypt_index
-        self._index_name = f"{name}_index"
-        self._expiry_dict_name = f"{name}_expiry_list"
+        self._index_name = f"{name}{INDEX_SUFFIX}"
+        self._expiry_dict_name = f"{name}{EXPIRY_DICT_SUFFIX}"
 
         if index_size > DEFAULT_INDEX_SIZE:
             _index_size = index_size
         else:
             _index_size = DEFAULT_INDEX_SIZE
 
+        self._delete_on_cleanup = delete_on_cleanup
+
+        # Always store values serialised (Shared mem stores bytes)
+        self._store_serialised = True
+        self._serialisation_method = SerialisationType.PICKLE
+
         self._index_shm = DataStoreSharedMemItem(
             name=self._index_name,
             size=_index_size,
             logger_name=self._logger_name,
             logger_level=self._logger_level
+        )
+        self._index_shm.set(
+            value=self._encode(value=[], encrypt=self._encrypt_index)
         )
 
         self._expiry_dict_shm = DataStoreSharedMemItem(
@@ -166,12 +184,9 @@ class DataStoreSharedMem(DataStoreBaseClass):
             logger_name=self._logger_name,
             logger_level=self._logger_level
         )
-
-        self._delete_on_cleanup = delete_on_cleanup
-
-        # Always store values serialised (Shared mem stores bytes)
-        self._store_serialised = True
-        self._serialisation_method = SerialisationType.PICKLE
+        self._expiry_dict_shm.set(
+            value=self._encode(value={}, encrypt=self._encrypt_index)
+        )
 
         # Attributes
 
@@ -374,7 +389,7 @@ class DataStoreSharedMem(DataStoreBaseClass):
         )
 
         _expiry_dict = self._decode(
-            value=self._index_shm.get(),
+            value=self._expiry_dict_shm.get(),
             decrypt=self._encrypt_index
         )
 
@@ -695,7 +710,7 @@ class DataStoreSharedMem(DataStoreBaseClass):
 
         # Check on dot names
         if self._dot_names:
-            _keys = list(self._data.keys())
+            _keys = self._get_index()
             if not self._check_dot_name(keys=_keys, name=name):
                 raise KeyError(
                     "Value cannot be stored in a intermediate dot level name"

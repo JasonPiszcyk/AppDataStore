@@ -245,7 +245,7 @@ class Test_Shared_Mem_Items(TestBase):
             AssertionError:
                 when test fails
         '''
-        _name = "test_update"
+        _name = "test_upd"
         _value = "StringPrefix"
         _add_to_str = " extra stuff"
         _new_value = f"{_value}{_add_to_str}"

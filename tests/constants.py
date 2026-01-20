@@ -45,7 +45,7 @@ DEFAULT_STR_VALUE = "default_string_value"
 DEFAULT_TIMEOUT = 2
 DEFAULT_WAIT = 1
 
-BASIC_NAME = "VariableName"
+BASIC_NAME = "VarName"
 DOT_NAME = "dot.name"
 SIMPLE_STR_VALUE = "Value for simple variable"
 

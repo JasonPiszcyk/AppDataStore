@@ -127,6 +127,7 @@ class DataStoreINIFile(DataStoreBaseClass):
         # strings)
         self._store_serialised = True
         self._serialisation_method = SerialisationType.JSON
+        self._encrypt_to_string = True
 
         # Attributes
 
@@ -362,7 +363,8 @@ class DataStoreINIFile(DataStoreBaseClass):
         self.maintenance()
 
         _config = self.__read_ini()
-        _value = _config.get(section, name, fallback=default)
+        _value = _config.get(section, name, fallback=None)
+        if _value is None: return default
 
         _decoded_value = self._decode(value=_value, decrypt=decrypt)
 

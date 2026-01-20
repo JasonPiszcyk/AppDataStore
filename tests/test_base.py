@@ -100,13 +100,13 @@ class TestBase():
         assert name
 
         # Ensure the item does not exist
-        assert not ds.has(name=name)
+        assert not ds.has(name=name)    # type: ignore
 
         # Try to get the item (should return None)
-        assert not ds.get(name=name)
+        assert not ds.get(name=name)    # type: ignore
 
         # Try to get the item (should return a default string)
-        assert ds.get(
+        assert ds.get(                  # type: ignore
             name=name,
             default=DEFAULT_STR_VALUE
         ) == DEFAULT_STR_VALUE
@@ -141,13 +141,13 @@ class TestBase():
         assert name
 
         # Ensure the item exists
-        assert ds.has(name=name)
+        assert ds.has(name=name)    # type: ignore
 
         # Try to get the item (should return the value)
-        assert ds.get(name=name) == value
+        assert ds.get(name=name) == value   # type: ignore
 
         # Try to get the item (should return the value)
-        assert ds.get(
+        assert ds.get(              # type: ignore
             name=name,
             default=DEFAULT_STR_VALUE
         ) == value
@@ -182,23 +182,23 @@ class TestBase():
         assert name
 
         # Ensure the item exists
-        assert ds.has(name=name)
+        assert ds.has(name=name)    # type: ignore
 
         # Try to get the item (should return the encrypted string)
-        assert ds.get(name=name) != value
+        assert ds.get(name=name) != value   # type: ignore
 
         # Try to get the item and decrypt it
-        assert ds.get(name=name, decrypt=True) == value
+        assert ds.get(name=name, decrypt=True) == value     # type: ignore
 
         # Try to get the item with a default (should return the encrypted
         # string)
-        assert ds.get(
+        assert ds.get(      # type: ignore
             name=name,
             default=DEFAULT_STR_VALUE
         ) != value
 
         # Try to get the item with a default and decrypt it
-        assert ds.get(
+        assert ds.get(         # type: ignore
             name=name,
             default=DEFAULT_STR_VALUE,
             decrypt=True
@@ -228,11 +228,11 @@ class TestBase():
         self._assert_not_set(ds=ds, name=BASIC_NAME)
 
         # Create the item and check it exists (this checks the 'get' method)
-        ds.set(name=BASIC_NAME, value=SIMPLE_STR_VALUE)
+        ds.set(name=BASIC_NAME, value=SIMPLE_STR_VALUE)     # type: ignore
         self._assert_set(ds=ds, name=BASIC_NAME, value=SIMPLE_STR_VALUE)
 
         # Delete the item and make sure it is gone
-        ds.delete(name=BASIC_NAME)
+        ds.delete(name=BASIC_NAME)                          # type: ignore
         self._assert_not_set(ds=ds, name=BASIC_NAME)
 
 
@@ -259,11 +259,15 @@ class TestBase():
         self._assert_not_set(ds=ds, name=BASIC_NAME)
 
         # Create the item and check it exists (this checks the 'get' method)
-        ds.set(name=BASIC_NAME, value=SIMPLE_STR_VALUE, encrypt=True)
+        ds.set(         # type: ignore
+            name=BASIC_NAME,
+            value=SIMPLE_STR_VALUE,
+            encrypt=True
+        )
         self._assert_set_enc(ds=ds, name=BASIC_NAME, value=SIMPLE_STR_VALUE)
 
         # Delete the item and make sure it is gone
-        ds.delete(name=BASIC_NAME)
+        ds.delete(name=BASIC_NAME)      # type: ignore
         self._assert_not_set(ds=ds, name=BASIC_NAME)
 
 
@@ -290,7 +294,7 @@ class TestBase():
         self._assert_not_set(ds=ds, name=BASIC_NAME)
 
         # Create the item and check it exists (this checks the 'get' method)
-        ds.set(
+        ds.set(         # type: ignore
             name=BASIC_NAME,
             value=SIMPLE_STR_VALUE,
             timeout=DEFAULT_TIMEOUT
@@ -327,14 +331,14 @@ class TestBase():
 
         # Create items using dotnames
         for _name in DOT_NAME_LIST:
-            # Append "_value" to create a astring tgo use as the value
-            _value = f"{_name}_value"
+            # Append "_v" to create a string to use as the value
+            _value = f"{_name}_v"
 
             # The item should not exist
             self._assert_not_set(ds=ds, name=_name)
 
             # Create the item and check it exists (this checks the 'get' method)
-            ds.set(name=_name, value=_value)
+            ds.set(name=_name, value=_value)                    # type: ignore
             self._assert_set(ds=ds, name=_name, value=_value)
 
 
@@ -343,10 +347,10 @@ class TestBase():
         # - Trying to add a branch when a value is set
         for _name in INVALID_DOT_NAME_LIST:
             with pytest.raises(KeyError):
-                ds.set(name=_name, value=DEFAULT_STR_VALUE)
+                ds.set(name=_name, value=DEFAULT_STR_VALUE)     # type: ignore
 
         for _name in DOT_NAME_LIST:
-            ds.delete(name=_name)
+            ds.delete(name=_name)                               # type: ignore
             self._assert_not_set(ds=ds, name=_name)
 
 

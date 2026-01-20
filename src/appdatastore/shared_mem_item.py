@@ -29,6 +29,7 @@ from __future__ import annotations
 # Shared variables, constants, etc
 
 # System Modules
+import sys
 import time
 from multiprocessing.shared_memory import SharedMemory
 
@@ -56,10 +57,17 @@ from typing import Callable
 LOCK_RETRY = 0.2
 LOCK_WAIT_TIMEOUT = 30.0
 
+# _SHM_SAFE_NAME_LENGTH in multiprocessing.shared_memory = 14
+LOCK_NAME_SUFFIX = "L"
+SHARED_ITEM_NAME_MAX = 14 - len(LOCK_NAME_SUFFIX)
+
 #
 # Global Variables
 #
-
+if sys.version_info < (3, 13):
+    TrackArgs = {}
+else:
+    TrackArgs = { "track": False }
 
 ###########################################################################
 #
@@ -83,7 +91,7 @@ def shared_memory_exists(name: str = "") -> bool:
         None
     '''
     try:
-        _shm = SharedMemory(name=name, create=False, track=False)
+        _shm = SharedMemory(name=name, create=False, **TrackArgs)
         _shm.close()
         return True
 
@@ -134,17 +142,21 @@ class DataStoreSharedMemItem():
 
         Raises:
             AssertionError
-                When name is not a string or is empty
+                When name is not a string, is empty, or is greater than
+                    SHARED_ITEM_NAME_MAX characters
             TypeError
                 When share memory creation fails
         '''
         assert isinstance(name, str), "name must be a string"
         assert name, "name cannot be empty"
+        assert len(name) <= SHARED_ITEM_NAME_MAX, (
+            f"name can be at most {SHARED_ITEM_NAME_MAX} characters"
+        )
 
         # Private Attributes
         self._name = name
         self._shm = None
-        self._lock_name = f"{name}_item_lock"
+        self._lock_name = f"{name}{LOCK_NAME_SUFFIX}"
         self._lock = None
 
         if isinstance(logger_name, str) and logger_name:
@@ -158,7 +170,6 @@ class DataStoreSharedMemItem():
 
         # Open the shared mem segment
         self.open(size=size)
-
 
 
     #
@@ -266,7 +277,7 @@ class DataStoreSharedMemItem():
                     name=self._lock_name,
                     create=True,
                     size=1,
-                    track=False
+                    **TrackArgs
                 )
                 _lock_acquired = True
 
@@ -349,7 +360,7 @@ class DataStoreSharedMemItem():
             self._shm = SharedMemory(
                 name=self._name,
                 create=False,
-                track=False
+                **TrackArgs
             )
 
         except FileNotFoundError:
@@ -360,7 +371,7 @@ class DataStoreSharedMemItem():
                 name=self._name,
                 create=True,
                 size=size,
-                track=False
+                **TrackArgs
             )
 
 

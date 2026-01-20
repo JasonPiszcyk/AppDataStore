@@ -34,6 +34,7 @@ import crypto_tools
 from crypto_tools.constants import ENCODE_METHOD
 from applogging.logging import get_logger, init_console_logger
 from appcore.conversion import to_json, from_json, to_pickle, from_pickle
+from json import JSONDecodeError
 
 # Local app modules
 from appdatastore.typing import SerialisationType
@@ -121,6 +122,7 @@ class DataStoreBaseClass():
         self._manual_expiry = True
         self._store_serialised = False
         self._serialisation_method = SerialisationType.JSON
+        self._encrypt_to_string = False
 
         self._lock = Lock()
 
@@ -245,7 +247,11 @@ class DataStoreBaseClass():
                 _value_to_store = crypto_tools.fernet.encrypt(
                     data=_byte_data,
                     key=self._key
-                ).decode(ENCODE_METHOD)
+                )
+
+                # If in a text file, store this as a string
+                if self._encrypt_to_string:
+                    _value_to_store = _value_to_store.decode(ENCODE_METHOD)
 
         else:
             _value_to_store = value
@@ -279,31 +285,63 @@ class DataStoreBaseClass():
         '''
         _decoded_val = None
 
-        # Check the type of the value provided
-
-        if decrypt or self._store_serialised:
-            if decrypt:
+        if decrypt:
+            if self._encrypt_to_string:
                 if not isinstance(value, str):
                     raise TypeError(
                         f"Cannot decrypt data type: {type(value)}"
                     )
 
-                _serialised_bytes = crypto_tools.fernet.decrypt(
-                    data=str(value).encode(ENCODE_METHOD),
-                    key=self._key
-                )
+                _enc_data = str(value).encode(ENCODE_METHOD)
 
             else:
-                _serialised_bytes = value
+                if not isinstance(value, bytes):
+                    raise TypeError(
+                        f"Cannot decrypt data type: {type(value)}"
+                    )
 
+                _enc_data = value
+
+            # Decrypt
+            _data = crypto_tools.fernet.decrypt(
+                data=_enc_data,
+                key=self._key
+            )
+
+        else:
+            _data = value
+
+        if decrypt or self._store_serialised:
             # Deserialise the data
             if self._serialisation_method == SerialisationType.JSON:
-                _decoded_val = from_json(
-                    data=_serialised_bytes.decode(ENCODE_METHOD)
-                )
+                if _data is None:
+                    _decoded_val = None
+                else:
+                    # If decrypted, data is now in bytes
+                    if decrypt: _data = _data.decode(ENCODE_METHOD)
+
+                    if not isinstance(_data, str):
+                        raise TypeError(
+                            f"Cannot deserialise JSON data: {type(value)}"
+                        )
+
+                    # Try to convert, if fails just return value
+                    try:
+                        _decoded_val = from_json(data=_data)
+                    except JSONDecodeError:
+                        _decoded_val = _data
 
             elif self._serialisation_method == SerialisationType.PICKLE:
-                _decoded_val = from_pickle(data=value)
+                if not isinstance(_data, bytes):
+                    raise TypeError(
+                        f"Cannot deserialise PICKLE data: {type(value)}"
+                    )
+
+                # Try to convert, if fails just return value
+                try:
+                    _decoded_val = from_pickle(data=_data)
+                except TypeError:
+                    _decoded_val = _data
 
             else:
                 raise AssertionError("Invalid serialisation type")
