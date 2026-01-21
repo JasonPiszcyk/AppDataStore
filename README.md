@@ -9,11 +9,15 @@ Not yet Published to PyPi
 [![Build Status](https://github.com/JasonPiszcyk/AppnetComms/actions/workflows/python-app.yml/badge.svg)](https://github.com/JasonPiszcyk/AppDataStore/actions)
  -->
 
+
 ## Overview
+
 
 **AppDataStore** provides different data store implementations.
 
+
 ## Features
+
 
 **AppDataStore** consists of a number of sub-modules, being:
 - [Mem](#mem-usage)
@@ -47,6 +51,7 @@ All datastores share a set of basic characteristics:
   - The default module logger writes to the console, and the logging level can be customised.
   - A custom python logger can be used in place of the default module logger to allow for greater customisation.
 
+
 ## Installation
 
 Module has not been published to PyPi yet.  Install via:
@@ -54,18 +59,25 @@ Module has not been published to PyPi yet.  Install via:
 pip install "appdatastore @ git+https://github.com/JasonPiszcyk/AppDataStore"
 ```
 
+
 ## Requirements
 
 - Python >= 3.8
 
-**NOTE:** The module has been tested against Python 3.14 and 3.8.
+> [!NOTE]
+> The module has been tested against Python 3.8 and 3.14.
+
 
 ## Dependencies
 
 - pytest
+- redis
+- "appcore @ git+https://github.com/JasonPiszcyk/AppCore"
 - "crypto_tools @ git+https://github.com/JasonPiszcyk/CryptoTools"
 
+
 ## Usage
+
 
 ### <a id="common-arguments"></a>Common Arguments
 *class* AppDataStore.**DataStoreBaseClass**(*password="", salt=b"", security="high", dot_names=False, logger_name="", logger_level="CRITICAL"*)
@@ -79,10 +91,12 @@ pip install "appdatastore @ git+https://github.com/JasonPiszcyk/AppDataStore"
 | **logger_name** (str) | The name of the logger to use.  If empty (or not a string) then a logger will be created to log to the console |
 | **logger_level** (str) | If no logger name is provided, the created logger will be set to log events at or above this level (default = "CRITICAL") |
 
+
 ### <a id="common-properties"></a>Common Properties
 | Property | Description |
 | - | - |
 | **dot_names** (str) [ReadOnly] | If True, dot names are used to create a hierarchy of values for this data store |
+
 
 ### <a id="mem-usage"></a>Mem
 *class* AppDataStore.**DataStoreMem**(***Common Arguments***)
@@ -93,20 +107,17 @@ Common properties as per [Common Properties](#common-properties)
 
 
 **maintenance()**
-<div style="padding-left: 30px;">
-  Perform maintenance on items (such as expiry).  It is generally not necesary to call this function as it call whenever the datastore is accessed.
-</div>
-&nbsp
+
+Perform maintenance on items (such as expiry).  It is generally not necessary to call this function as it is called whenever the datastore is accessed.
+
 
 **has(** name="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to check</td></tr>
-  </table>
 
-  Check if the item represented by *name* exists in the datastore.
-</div>
+> Check if the item represented by *name* exists in the datastore.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to check |
 
 
 **get(** name="", default=None, decrypt=False **)**
