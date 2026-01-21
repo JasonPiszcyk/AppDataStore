@@ -461,7 +461,7 @@ Common properties as per [Common Properties](#common-properties)
 > | **container** (bool) | If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values. |
 
 
-### <a id="redis-usage"></a>Mem
+### <a id="redis-usage"></a>Redis
 *class* AppDataStore.**DataStoreRedis**(***Common Arguments***, ***Redis Arguments***)
 
 Common arguments as per [Common Arguments](#common-arguments)
