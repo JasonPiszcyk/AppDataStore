@@ -62,7 +62,7 @@ pip install "appdatastore @ git+https://github.com/JasonPiszcyk/AppDataStore"
 
 ## Requirements
 
-- Python >= 3.8
+Python >= 3.8
 
 > [!NOTE]
 > The module has been tested against Python 3.8 and 3.14.
@@ -99,6 +99,7 @@ pip install "appdatastore @ git+https://github.com/JasonPiszcyk/AppDataStore"
 
 
 ### <a id="mem-usage"></a>Mem
+
 *class* AppDataStore.**DataStoreMem**(***Common Arguments***)
 
 Common arguments as per [Common Arguments](#common-arguments)
@@ -108,7 +109,7 @@ Common properties as per [Common Properties](#common-properties)
 
 **maintenance()**
 
-Perform maintenance on items (such as expiry).  It is generally not necessary to call this function as it is called whenever the datastore is accessed.
+> Perform maintenance on items (such as expiry).  It is generally not necessary to call this function as it is called whenever the datastore is accessed.
 
 
 **has(** name="" **)**
@@ -121,66 +122,57 @@ Perform maintenance on items (such as expiry).  It is generally not necessary to
 
 
 **get(** name="", default=None, decrypt=False **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to get</td></tr>
-    <tr><td><b>default</b> (Any)</td><td>Value to return if the item cannot be found</td></tr>
-    <tr><td><b>decrypt</b> (bool)</td><td>If True, attempt to decrypt the value</td></tr>
-  </table>
 
-  Get the item represented by *name* in the datastore, optionally trying to decrypt the encrypted stored value.  If not found, return the value specified in *default*.
-</div>
+> Get the item represented by *name* in the datastore, optionally trying to decrypt the encrypted stored value.  If not found, return the value specified in *default*.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to get |
+> | **default** (Any) | Value to return if the item cannot be found |
+> | **decrypt** (bool) | If True, attempt to decrypt the value |
 
 
 **set(** name="", value=Any, encrypt=False, timeout=0 **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to set</td></tr>
-    <tr><td><b>value</b> (Any)</td><td>The value to set the item to</td></tr>
-    <tr><td><b>encrypt</b> (bool)</td><td>If True, encrypt the value before storing it</td></tr>
-    <tr><td><b>timeout</b> (int)</td><td>The number of seconds before the item should be deleted (0 = never delete)</td></tr>
-  </table>
 
-  Set the item represented by *name* in the datastore to *value*. If *encrypt* is True, encrypt the item before storing.  If *timeout* is non-zero, delete the item after *timeout* seconds.
-</div>
+> Set the item represented by *name* in the datastore to *value*. If *encrypt* is True, encrypt the item before storing.  If *timeout* is non-zero, delete the item after *timeout* seconds.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to set |
+> | **value** (Any) | The value to set the item to |
+> | **encrypt** (bool) | If True, encrypt the value before storing it |
+> | **timeout** (int) | The number of seconds before the item should be deleted (0 = never delete) |
 
 
 **delete(** name="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to delete</td></tr>
-  </table>
 
-  Delete the item represented by *name* from the datastore.
-</div>
+>  Delete the item represented by *name* from the datastore.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to delete |
 
 
 **list(** prefix="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>prefix</b> (str)</td><td>Match any item names beginning with this string</td></tr>
-  </table>
 
-  List the items in the data store.  If *prefix* is provided, the list will be restricted to those item names that start with *prefix*.
-</div>
+> List the items in the data store.  If *prefix* is provided, the list will be restricted to those item names that start with *prefix*.
+
+> | Argument | Description |
+> | - | - |
+> | **prefix** (str) | Match any item names beginning with this string |
 
 
 **export_to_json(** container=True **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>container</b> (bool)</td><td>If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values.</td></tr>
-  </table>
 
-  Export the items in the data store to a JSON format.  If *container* is True, additional non-standard information is added to assist with data typing.
-</div>
+> Export the items in the data store to a JSON format.  If *container* is True, additional non-standard information is added to assist with data typing.
+
+> | Argument | Description |
+> | - | - |
+> | **container** (bool) | If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values. |
 
 
 ### <a id="shared-mem-usage"></a>Shared Mem
+
 *class* AppDataStore.**DataStoreSharedMemItem**(*name="", size=1, logger_name="", logger_level="CRITICAL"*)
 
 | Argument | Description |
@@ -195,49 +187,43 @@ Perform maintenance on items (such as expiry).  It is generally not necessary to
 | **name** (str) [ReadOnly] | The name of the item/shared memory segment |
 | **size** (str) [ReadOnly] | The size of the shared memory segment (which maybe larger than the requested size when it was created) |
 
+
 **open()**
-<div style="padding-left: 30px;">
-  Connect to the shared memory segment (if is has been closed) or create a new segment (if it has never been created or has been unlinked). This is called automatically when the instance is created.
-</div>
-&nbsp
+
+> Connect to the shared memory segment (if is has been closed) or create a new segment (if it has never been created or has been unlinked). This is called automatically when the instance is created.
+
 
 **close()**
-<div style="padding-left: 30px;">
-  Disconnect from shared memory segment.
-</div>
-&nbsp
+
+> Disconnect from shared memory segment.
+
 
 **delete()**
-<div style="padding-left: 30px;">
-  Disconnect from shared memory segment and delete it. The segment will no longer be accessible for remote processes.
-</div>
-&nbsp
+
+> Disconnect from shared memory segment and delete it. The segment will no longer be accessible for remote processes.
+
 
 **get()**
-<div style="padding-left: 30px;">
-  Get the raw value (in bytes) from the shared memory segment. The segment is locked during the write of the value.
-</div>
-&nbsp
+> Get the raw value (in bytes) from the shared memory segment.
+
 
 **set(** value=b"" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>value</b> (bytes)</td><td>The raw value, in bytes, to store in the shared memory segment</td></tr>
-  </table>
 
-  Store a value in the shared memory segment.
-</div>
+> Store a value in the shared memory segment. The segment is locked during the write of the value.
+
+> | Argument | Description |
+> | - | - |
+> | **value** (bytes) | The raw value, in bytes, to store in the shared memory segment |
+
 
 **update(** function=None **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>function</b> (Callable)</td><td>A function to transform the stored value to the new value. Must accept the current value as bytes and return the new value as bytes</td></tr>
-  </table>
 
-  Perform an atomic update using the mutation function provided.  The item is locked before the value is read until the function completes and the result is written.
-</div>
+> Perform an atomic update using the mutation function provided.  The item is locked before the value is read until the function completes and the result is written.
+
+> | Argument | Description |
+> | - | - |
+> | **function** (Callable) | A function to transform the stored value to the new value. Must accept the current value as bytes and return the new value as bytes |
+
 
 ```python
 # Example usage of Shared Memory Item
@@ -281,6 +267,7 @@ shm.close()
 shm.delete()
 ```
 
+
 *class* AppDataStore.**DataStoreSharedMem**(***Common Arguments***, *name="", encrypt_index=False, index_size=16384, delete_on_cleanup=False*)
 
 Common arguments as per [Common Arguments](#common-arguments)
@@ -301,80 +288,67 @@ Common properties as per [Common Properties](#common-properties)
 
 
 **maintenance()**
-<div style="padding-left: 30px;">
-  Perform maintenance on items (such as expiry).  It is generally not necesary to call this function as it call whenever the datastore is accessed.
-</div>
-&nbsp
+
+> Perform maintenance on items (such as expiry).  It is generally not necessary to call this function as it is called whenever the datastore is accessed.
+
 
 **has(** name="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to check</td></tr>
-  </table>
 
-  Check if the item represented by *name* exists in the datastore.
-</div>
+> Check if the item represented by *name* exists in the datastore.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to check |
 
 
 **get(** name="", default=None, decrypt=False **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to get</td></tr>
-    <tr><td><b>default</b> (Any)</td><td>Value to return if the item cannot be found</td></tr>
-    <tr><td><b>decrypt</b> (bool)</td><td>If True, attempt to decrypt the value</td></tr>
-  </table>
 
-  Get the item represented by *name* in the datastore, optionally trying to decrypt the encrypted stored value.  If not found, return the value specified in *default*.
-</div>
+> Get the item represented by *name* in the datastore, optionally trying to decrypt the encrypted stored value.  If not found, return the value specified in *default*.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to get |
+> | **default** (Any) | Value to return if the item cannot be found |
+> | **decrypt** (bool) | If True, attempt to decrypt the value |
 
 
 **set(** name="", value=Any, encrypt=False, timeout=0 **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to set</td></tr>
-    <tr><td><b>value</b> (Any)</td><td>The value to set the item to</td></tr>
-    <tr><td><b>encrypt</b> (bool)</td><td>If True, encrypt the value before storing it</td></tr>
-    <tr><td><b>timeout</b> (int)</td><td>The number of seconds before the item should be deleted (0 = never delete)</td></tr>
-  </table>
 
-  Set the item represented by *name* in the datastore to *value*. If *encrypt* is True, encrypt the item before storing.  If *timeout* is non-zero, delete the item after *timeout* seconds.
-</div>
+> Set the item represented by *name* in the datastore to *value*. If *encrypt* is True, encrypt the item before storing.  If *timeout* is non-zero, delete the item after *timeout* seconds.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to set |
+> | **value** (Any) | The value to set the item to |
+> | **encrypt** (bool) | If True, encrypt the value before storing it |
+> | **timeout** (int) | The number of seconds before the item should be deleted (0 = never delete) |
 
 
 **delete(** name="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to delete</td></tr>
-  </table>
 
-  Delete the item represented by *name* from the datastore.
-</div>
+>  Delete the item represented by *name* from the datastore.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to delete |
 
 
 **list(** prefix="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>prefix</b> (str)</td><td>Match any item names beginning with this string</td></tr>
-  </table>
 
-  List the items in the data store.  If *prefix* is provided, the list will be restricted to those item names that start with *prefix*.
-</div>
+> List the items in the data store.  If *prefix* is provided, the list will be restricted to those item names that start with *prefix*.
+
+> | Argument | Description |
+> | - | - |
+> | **prefix** (str) | Match any item names beginning with this string |
 
 
 **export_to_json(** container=True **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>container</b> (bool)</td><td>If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values.</td></tr>
-  </table>
 
-  Export the items in the data store to a JSON format.  If *container* is True, additional non-standard information is added to assist with data typing.
-</div>
+> Export the items in the data store to a JSON format.  If *container* is True, additional non-standard information is added to assist with data typing.
+
+> | Argument | Description |
+> | - | - |
+> | **container** (bool) | If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values. |
 
 
 ### <a id="ini-file-usage"></a>INI File
@@ -392,65 +366,56 @@ Common properties as per [Common Properties](#common-properties)
 | - | - |
 | **filename** (str) [ReadOnly] | The path for the INI file |
 
+
 **maintenance()**
-<div style="padding-left: 30px;">
-  Perform maintenance on items (such as expiry).  It is generally not necesary to call this function as it call whenever the DS is accessed.
-</div>
-&nbsp
+
+> Perform maintenance on items (such as expiry).  It is generally not necessary to call this function as it is called whenever the datastore is accessed.
+
 
 **has_section(** section="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>section</b> (str)</td><td>The section to check</td></tr>
-  </table>
 
-  Check if the section represented by *section* exists in the datastore.
-</div>
+> Check if the section represented by *section* exists in the datastore.
+
+> | Argument | Description |
+> | - | - |
+> | **section** (str) | The section to check |
 
 
 **has(** section="", name="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>section</b> (str)</td><td>The section to check</td></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to check</td></tr>
-  </table>
 
-  Check if the item represented by *name* exists in the section represented by *section* in the datastore.
-</div>
+> Check if the item represented by *name* exists in the section represented by *section* in the datastore.
+
+> | Argument | Description |
+> | - | - |
+> | **section** (str) | The section to check |
+> | **name** (str) | The name of the item to check |
 
 
 **get(** section="", name="", default=None, decrypt=False **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>section</b> (str)</td><td>The section containing the item to get</td></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to get</td></tr>
-    <tr><td><b>default</b> (Any)</td><td>Value to return if the item cannot be found</td></tr>
-    <tr><td><b>decrypt</b> (bool)</td><td>If True, attempt to decrypt the value</td></tr>
-  </table>
 
-  Get the item represented by *name*, in the section represented by *section*, in the datastore, optionally trying to decrypt the encrypted stored value.  If not found, return the value specified in *default*.
-</div>
+> Get the item represented by *name* in the datastore from the section represented by *section*, optionally trying to decrypt the encrypted stored value.  If not found, return the value specified in *default*.
+
+> | Argument | Description |
+> | - | - |
+> | **section** (str) | The section containing the item to get |
+> | **name** (str) | The name of the item to get |
+> | **default** (Any) | Value to return if the item cannot be found |
+> | **decrypt** (bool) | If True, attempt to decrypt the value |
 
 
 **set(** section="", name="", value=Any, encrypt=False, timeout=0 **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>section</b> (str)</td><td>The section containing the item to set</td></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to set</td></tr>
-    <tr><td><b>value</b> (Any)</td><td>The value to set the item to</td></tr>
-    <tr><td><b>encrypt</b> (bool)</td><td>If True, encrypt the value before storing it</td></tr>
-    <tr><td><b>timeout</b> (int)</td><td>The number of seconds before the item should be deleted (0 = never delete)</td></tr>
-  </table>
 
-  Set the item represented by *name*, in the section represented by *section*, in the datastore to *value*. If *encrypt* is True, encrypt the item before storing.  If *timeout* is non-zero, delete the item after *timeout* seconds.
-</div>
+> Set the item represented by *name*, in the section represented by *section*, in the datastore to *value*. If *encrypt* is True, encrypt the item before storing.  If *timeout* is non-zero, delete the item after *timeout* seconds.
+
+> | Argument | Description |
+> | - | - |
+> | **section** (str) | The section containing the item to set |
+> | **name** (str) | The name of the item to set |
+> | **value** (Any) | The value to set the item to |
+> | **encrypt** (bool) | If True, encrypt the value before storing it |
+> | **timeout** (int) | The number of seconds before the item should be deleted (0 = never delete) |
 
 
-**delete(** section="", name="" **)**
 <div style="padding-left: 30px;">
   <table>
     <tr><th>Argument</th><th>Description</th></tr>
@@ -462,34 +427,38 @@ Common properties as per [Common Properties](#common-properties)
 </div>
 
 
+**delete(** section="", name="" **)**
+
+>  Delete the item represented by *name*, in the section represented by *section*, from the datastore.
+
+> | Argument | Description |
+> | - | - |
+> | **section** (str) | The section containing the item to delete |
+> | **name** (str) | The name of the item to delete |
+
+
 **delete_file()**
-<div style="padding-left: 30px;">
-  Delete the file provided when the object was created.
-</div>
-&nbsp
+
+>  Delete the file identified when the object was created.
 
 
 **list(** section="", prefix="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>section</b> (str)</td><td>The section containing the items to list</td></tr>
-    <tr><td><b>list</b> (str)</td><td>Match any item names beginning with this</td></tr>
-  </table>
 
-  List the items in the data store.  If *section* is not provided, list the sections in the datastore.  If *section* is provided, list the items with the section. If *prefix* is provided, the list will be restricted to those item or section names that start with *prefix*.
-</div>
+> List the items in the data store.  If *section* is not provided, list the sections in the datastore.  If *section* is provided, list the items with the section. If *prefix* is provided, the list will be restricted to those item names or section names that start with *prefix*.
+
+> | Argument | Description |
+> | - | - |
+> | **section** (str) | The section containing the item to list |
+> | **prefix** (str) | Match any item names beginning with this string |
 
 
 **export_to_json(** container=True **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>container</b> (bool)</td><td>If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values.</td></tr>
-  </table>
 
-  Export the items in the data store to a JSON format.  If *container* is True, additional non-standard information is added to assist with data typing.
-</div>
+> Export the items in the data store to a JSON format.  If *container* is True, additional non-standard information is added to assist with data typing.
+
+> | Argument | Description |
+> | - | - |
+> | **container** (bool) | If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values. |
 
 
 ### <a id="redis-usage"></a>Mem
@@ -507,97 +476,78 @@ Common properties as per [Common Properties](#common-properties)
 
 
 **connect()**
-<div style="padding-left: 30px;">
-  Connect to Redis datastore
-</div>
-&nbsp
+
+> Connect to Redis datastore
+
 
 **disconnect()**
-<div style="padding-left: 30px;">
-  Disconnect from the Redis datastore.
-</div>
-&nbsp
+
+> Disconnect from the Redis datastore.
+
 
 **maintenance()**
-<div style="padding-left: 30px;">
-  Perform maintenance on items.  It is generally not necesary to call this function as it call whenever the datastore is accessed.
-</div>
-&nbsp
+
+> Perform maintenance on items.  It is generally not necessary to call this function as it is called whenever the datastore is accessed.
+
 
 **has(** name="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to check</td></tr>
-  </table>
 
-  Check if the item represented by *name* exists in the datastore.
-</div>
+> Check if the item represented by *name* exists in the datastore.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to check |
+
 
 **get(** name="", default=None, decrypt=False **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to get</td></tr>
-    <tr><td><b>default</b> (Any)</td><td>Value to return if the item cannot be found</td></tr>
-    <tr><td><b>decrypt</b> (bool)</td><td>If True, attempt to decrypt the value</td></tr>
-  </table>
 
-  Get the item represented by *name* in the datastore, optionally trying to decrypt the encrypted stored value.  If not found, return the value specified in *default*.
-</div>
+> Get the item represented by *name* in the datastore, optionally trying to decrypt the encrypted stored value.  If not found, return the value specified in *default*.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to get |
+> | **default** (Any) | Value to return if the item cannot be found |
+> | **decrypt** (bool) | If True, attempt to decrypt the value |
 
 
 **set(** name="", value=Any, encrypt=False, timeout=0 **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to set</td></tr>
-    <tr><td><b>value</b> (Any)</td><td>The value to set the item to</td></tr>
-    <tr><td><b>encrypt</b> (bool)</td><td>If True, encrypt the value before storing it</td></tr>
-    <tr><td><b>timeout</b> (int)</td><td>The number of seconds before the item should be deleted (0 = never delete)</td></tr>
-  </table>
 
-  Set the item represented by *name* in the datastore to *value*. If *encrypt* is True, encrypt the item before storing.  If *timeout* is non-zero, delete the item after *timeout* seconds.
-</div>
+> Set the item represented by *name* in the datastore to *value*. If *encrypt* is True, encrypt the item before storing.  If *timeout* is non-zero, delete the item after *timeout* seconds.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to set |
+> | **value** (Any) | The value to set the item to |
+> | **encrypt** (bool) | If True, encrypt the value before storing it |
+> | **timeout** (int) | The number of seconds before the item should be deleted (0 = never delete) |
 
 
 **delete(** name="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>name</b> (str)</td><td>The name of the item to delete</td></tr>
-  </table>
 
-  Delete the item represented by *name* from the datastore.
-</div>
+>  Delete the item represented by *name* from the datastore.
+
+> | Argument | Description |
+> | - | - |
+> | **name** (str) | The name of the item to delete |
 
 
 **list(** prefix="" **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>prefix</b> (str)</td><td>Match any item names beginning with this string</td></tr>
-  </table>
 
-  List the items in the data store.  If *prefix* is provided, the list will be restricted to those item names that start with *prefix*.
-</div>
+> List the items in the data store.  If *prefix* is provided, the list will be restricted to those item names that start with *prefix*.
+
+> | Argument | Description |
+> | - | - |
+> | **prefix** (str) | Match any item names beginning with this string |
 
 
 **export_to_json(** container=True **)**
-<div style="padding-left: 30px;">
-  <table>
-    <tr><th>Argument</th><th>Description</th></tr>
-    <tr><td><b>container</b> (bool)</td><td>If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values.</td></tr>
-  </table>
 
-  Not currently implemented.  Raises 'NotImplementedError'.
-</div>
+> Not currently implemented.  Raises 'NotImplementedError'.
 
+> | Argument | Description |
+> | - | - |
+> | **container** (bool) | If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values. |
 
-```python
-import appdatastore
-# Example usage of AppDataStore components
-```
 
 ## Development
 
