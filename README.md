@@ -23,8 +23,8 @@ Not yet Published to PyPi
   - Also implements a single item shared memory interface DataStoreSharedMemItem
 - [INI File](#ini-file-usage)
   - Datastore implemented as an INI file.
-- REDIS
-  - Interface to REDIS.  Implemented in separate module AppDataStore-REDIS.
+- [Redis](#redis-usage)
+  - Interface to Redis consistent with datastores in this module.
 
 All datastores share a set of basic characteristics:
 - Encryption
@@ -285,7 +285,7 @@ Common properties as per [Common Properties](#common-properties)
 
 | Property | Description |
 | - | - |
-| **name** (str) [ReadOnly] | The name of the datastore|
+| **name** (str) [ReadOnly] | The name of the datastore |
 | **index_size** (str) [ReadOnly] | The size of the index shared memory segment (which maybe larger than the requested size when it was created) |
 
 
@@ -481,6 +481,106 @@ Common properties as per [Common Properties](#common-properties)
 </div>
 
 
+### <a id="redis-usage"></a>Mem
+*class* AppDataStore.**DataStoreRedis**(***Common Arguments***, ***Redis Arguments***)
+
+Common arguments as per [Common Arguments](#common-arguments)
+
+Redis Arguments are prefixed with 'redis_'.  Args have the prefix ('redis_') stripped and are passed to the Redis object constructur.
+
+Common properties as per [Common Properties](#common-properties)
+
+| Property | Description |
+| - | - |
+| **connected** (str) [ReadOnly] | If True, the connection to Redis has been established |
+
+
+**connect()**
+<div style="padding-left: 30px;">
+  Connect to Redis datastore
+</div>
+&nbsp
+
+**disconnect()**
+<div style="padding-left: 30px;">
+  Disconnect from the Redis datastore.
+</div>
+&nbsp
+
+**maintenance()**
+<div style="padding-left: 30px;">
+  Perform maintenance on items.  It is generally not necesary to call this function as it call whenever the datastore is accessed.
+</div>
+&nbsp
+
+**has(** name="" **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>name</b> (str)</td><td>The name of the item to check</td></tr>
+  </table>
+
+  Check if the item represented by *name* exists in the datastore.
+</div>
+
+**get(** name="", default=None, decrypt=False **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>name</b> (str)</td><td>The name of the item to get</td></tr>
+    <tr><td><b>default</b> (Any)</td><td>Value to return if the item cannot be found</td></tr>
+    <tr><td><b>decrypt</b> (bool)</td><td>If True, attempt to decrypt the value</td></tr>
+  </table>
+
+  Get the item represented by *name* in the datastore, optionally trying to decrypt the encrypted stored value.  If not found, return the value specified in *default*.
+</div>
+
+
+**set(** name="", value=Any, encrypt=False, timeout=0 **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>name</b> (str)</td><td>The name of the item to set</td></tr>
+    <tr><td><b>value</b> (Any)</td><td>The value to set the item to</td></tr>
+    <tr><td><b>encrypt</b> (bool)</td><td>If True, encrypt the value before storing it</td></tr>
+    <tr><td><b>timeout</b> (int)</td><td>The number of seconds before the item should be deleted (0 = never delete)</td></tr>
+  </table>
+
+  Set the item represented by *name* in the datastore to *value*. If *encrypt* is True, encrypt the item before storing.  If *timeout* is non-zero, delete the item after *timeout* seconds.
+</div>
+
+
+**delete(** name="" **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>name</b> (str)</td><td>The name of the item to delete</td></tr>
+  </table>
+
+  Delete the item represented by *name* from the datastore.
+</div>
+
+
+**list(** prefix="" **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>prefix</b> (str)</td><td>Match any item names beginning with this string</td></tr>
+  </table>
+
+  List the items in the data store.  If *prefix* is provided, the list will be restricted to those item names that start with *prefix*.
+</div>
+
+
+**export_to_json(** container=True **)**
+<div style="padding-left: 30px;">
+  <table>
+    <tr><th>Argument</th><th>Description</th></tr>
+    <tr><td><b>container</b> (bool)</td><td>If True, additional non-standard information is added to assist with data typing when importing the JSON data.  This additional information will not be processed correctly by a standard JSON interpreter and should appears as additional string values.</td></tr>
+  </table>
+
+  Not currently implemented.  Raises 'NotImplementedError'.
+</div>
 
 
 ```python
