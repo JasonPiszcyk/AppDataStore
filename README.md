@@ -80,7 +80,8 @@ Python >= 3.8
 
 
 ### <a id="common-arguments"></a>Common Arguments
-*class* AppDataStore.**DataStoreBaseClass**(*password="", salt=b"", security="high", dot_names=False, logger_name="", logger_level="CRITICAL"*)
+
+#### *class* AppDataStore.**DataStoreBaseClass**(*password="", salt=b"", security="high", dot_names=False, logger_name="", logger_level="CRITICAL"*)
 
 | Argument | Description |
 | - | - |
@@ -100,7 +101,7 @@ Python >= 3.8
 
 ### <a id="mem-usage"></a>Mem
 
-*class* AppDataStore.**DataStoreMem**(***Common Arguments***)
+#### *class* AppDataStore.**DataStoreMem**(***Common Arguments***)
 
 Common arguments as per [Common Arguments](#common-arguments)
 
@@ -173,7 +174,7 @@ Common properties as per [Common Properties](#common-properties)
 
 ### <a id="shared-mem-usage"></a>Shared Mem
 
-*class* AppDataStore.**DataStoreSharedMemItem**(*name="", size=1, logger_name="", logger_level="CRITICAL"*)
+#### *class* AppDataStore.**DataStoreSharedMemItem**(*name="", size=1, logger_name="", logger_level="CRITICAL"*)
 
 | Argument | Description |
 | - | - |
@@ -268,7 +269,7 @@ shm.delete()
 ```
 
 
-*class* AppDataStore.**DataStoreSharedMem**(***Common Arguments***, *name="", encrypt_index=False, index_size=16384, delete_on_cleanup=False*)
+#### *class* AppDataStore.**DataStoreSharedMem**(***Common Arguments***, *name="", encrypt_index=False, index_size=16384, delete_on_cleanup=False*)
 
 Common arguments as per [Common Arguments](#common-arguments)
 
@@ -352,7 +353,9 @@ Common properties as per [Common Properties](#common-properties)
 
 
 ### <a id="ini-file-usage"></a>INI File
-*class* AppDataStore.**DataStoreINIFile**(***Common Arguments***, *filename=""*)
+
+
+#### *class* AppDataStore.**DataStoreINIFile**(***Common Arguments***, *filename=""*)
 
 Common arguments as per [Common Arguments](#common-arguments)
 
@@ -462,7 +465,8 @@ Common properties as per [Common Properties](#common-properties)
 
 
 ### <a id="redis-usage"></a>Redis
-*class* AppDataStore.**DataStoreRedis**(***Common Arguments***, ***Redis Arguments***)
+
+#### *class* AppDataStore.**DataStoreRedis**(***Common Arguments***, ***Redis Arguments***)
 
 Common arguments as per [Common Arguments](#common-arguments)
 
